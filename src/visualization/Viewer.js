@@ -46,7 +46,9 @@ ROS3D.Viewer = function(options) {
   var cameraZoomSpeed = options.cameraZoomSpeed || 0.5;
   var displayPanAndZoomFrame = (options.displayPanAndZoomFrame === undefined) ? true : !!options.displayPanAndZoomFrame;
   var lineTypePanAndZoomFrame = options.lineTypePanAndZoomFrame || 'full';
+  var ORB_CNTRLS = (options.ORB_CNTRLS === undefined) ? true : !!options.ORB_CNTRLS;
 
+  this.ORB_CNTRLS = ORB_CNTRLS;
   // create the canvas to render to
   this.renderer = new THREE.WebGLRenderer({
     antialias : antialias,
@@ -67,28 +69,39 @@ ROS3D.Viewer = function(options) {
   this.camera.position.y = cameraPosition.y;
   this.camera.position.z = cameraPosition.z;
   // add controls to the camera
-  this.cameraControls = new ROS3D.OrbitControls({
+  if(ORB_CNTRLS){
+    this.cameraControls = new ROS3D.OrbitControls({
     scene : this.scene,
     camera : this.camera,
     displayPanAndZoomFrame : displayPanAndZoomFrame,
     lineTypePanAndZoomFrame: lineTypePanAndZoomFrame
-  });
-  this.cameraControls.userZoomSpeed = cameraZoomSpeed;
+    });
+    this.cameraControls.userZoomSpeed = cameraZoomSpeed;
+  }
 
   // lights
-  this.scene.add(new THREE.AmbientLight(0x555555));
+  // this.scene.add(new THREE.AmbientLight(0x555555));
+  this.scene.add(new THREE.AmbientLight(0xffffff));
   this.directionalLight = new THREE.DirectionalLight(0xffffff, intensity);
   this.scene.add(this.directionalLight);
 
   // propagates mouse events to three.js objects
   this.selectableObjects = new THREE.Group();
   this.scene.add(this.selectableObjects);
-  var mouseHandler = new ROS3D.MouseHandler({
-    renderer : this.renderer,
-    camera : this.camera,
-    rootObject : this.selectableObjects,
-    fallbackTarget : this.cameraControls
-  });
+ if(ORB_CNTRLS){
+			var mouseHandler = new ROS3D.MouseHandler({
+			renderer : this.renderer,
+			camera : this.camera,
+			rootObject : this.selectableObjects,
+			fallbackTarget : this.cameraControls
+			});
+		}else{
+			var mouseHandler = new ROS3D.MouseHandler({
+			renderer : this.renderer,
+			camera : this.camera,
+			rootObject : this.selectableObjects,
+			});
+		}
 
   // highlights the receiver of mouse events
   this.highlighter = new ROS3D.Highlighter({
@@ -124,7 +137,8 @@ ROS3D.Viewer.prototype.draw = function(){
   }
 
   // update the controls
-  this.cameraControls.update();
+  if(this.ORB_CNTRLS)
+    {this.cameraControls.update();}
 
   // put light to the top-left of the camera
   // BUG: position is a read-only property of DirectionalLight,

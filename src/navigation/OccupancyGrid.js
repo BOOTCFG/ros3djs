@@ -13,18 +13,19 @@
  *   * color (optional) - color of the visualized grid
  *   * opacity (optional) - opacity of the visualized grid (0.0 == fully transparent, 1.0 == opaque)
  */
-ROS3D.OccupancyGrid = function(options) {
+ROS3D.OccupancyGrid = function (options) {
   options = options || {};
   var message = options.message;
   var opacity = options.opacity || 1.0;
-  var color = options.color || {r:255,g:255,b:255,a:255};
+  var color = options.color || { r: 255, g: 255, b: 255, a: 255 };
 
   // create the geometry
   var info = message.info;
   var origin = info.origin;
   var width = info.width;
   var height = info.height;
-  var geom = new THREE.PlaneBufferGeometry(width, height);
+  var geom = new THREE.PlaneBufferGeometry(width, height, 100, 100);
+
 
   // create the color material
   var imageData = new Uint8Array(width * height * 4);
@@ -34,12 +35,28 @@ ROS3D.OccupancyGrid = function(options) {
   texture.magFilter = THREE.NearestFilter;
   texture.needsUpdate = true;
 
-  var material = new THREE.MeshBasicMaterial({
-    map : texture,
-    transparent : opacity < 1.0,
-    opacity : opacity
+  var displacementData = new Uint8Array(width * height * 3);
+  var texture_displacement = new THREE.DataTexture(displacementData, width, height, THREE.RGBFormat);
+  texture_displacement.flipY = true;
+  texture_displacement.minFilter = THREE.NearestFilter;
+  texture_displacement.magFilter = THREE.NearestFilter;
+  texture_displacement.needsUpdate = true;
+
+  // var material = new THREE.MeshBasicMaterial({
+  var material = new THREE.MeshPhongMaterial({
+    map: texture,
+    displacementMap: texture_displacement,
+    //   displacementScale: 1.0,
+    //   transparent : true,
+    shininess:0.0,
+    // specular: new THREE.Color( 0x000000 ),
+    transparent: false,
+    opacity: opacity
   });
-  material.side = THREE.DoubleSide;
+  // material.side = THREE.DoubleSide;
+  material.side = THREE.FrontSide;
+
+  // console.log('dupa');
 
   // create the mesh
   THREE.Mesh.call(this, geom, material);
@@ -49,10 +66,10 @@ ROS3D.OccupancyGrid = function(options) {
   Object.assign(this, options);
 
   this.quaternion.copy(new THREE.Quaternion(
-      origin.orientation.x,
-      origin.orientation.y,
-      origin.orientation.z,
-      origin.orientation.w
+    origin.orientation.x,
+    origin.orientation.y,
+    origin.orientation.z,
+    origin.orientation.w
   ));
   this.position.x = (width * info.resolution) / 2 + origin.position.x;
   this.position.y = (height * info.resolution) / 2 + origin.position.y;
@@ -65,9 +82,11 @@ ROS3D.OccupancyGrid = function(options) {
   this.color = color;
   this.material = material;
   this.texture = texture;
+  this.texture_displacement = texture_displacement;
+  this.geom = geom;
 
-  for ( var row = 0; row < height; row++) {
-    for ( var col = 0; col < width; col++) {
+  for (var row = 0; row < height; row++) {
+    for (var col = 0; col < width; col++) {
 
       // determine the index into the map data
       var invRow = (height - row - 1);
@@ -76,10 +95,25 @@ ROS3D.OccupancyGrid = function(options) {
       var val = this.getValue(mapI, invRow, col, data);
 
       // determine the color
-      var color = this.getColor(mapI, invRow, col, val);
-
+      var color = this.getColor(mapI, invRow, col, 255-(val/100)*255);
+      color[3] = (100 - val)/100*255;
       // determine the index into the image data array
       var i = (col + (row * width)) * 4;
+      var ii = (col + (row * width)) * 3;
+
+
+
+      if (val >= 90 || val === -1) {
+        // color = [255,255,255,255];
+        color = [0,0,0,0];
+      }
+
+
+      if (val >= 100){
+        displacementData.set([255, 255, 255], ii);
+      } else {
+        displacementData.set([0, 0, 0], ii);
+      }
 
       // copy the color
       imageData.set(color, i);
@@ -87,12 +121,15 @@ ROS3D.OccupancyGrid = function(options) {
   }
 
   texture.needsUpdate = true;
-
+  // imageData = null;
+  // displacementData = null;
 };
 
-ROS3D.OccupancyGrid.prototype.dispose = function() {
-  this.material.dispose();
+ROS3D.OccupancyGrid.prototype.dispose = function () {
+  this.geom.dispose()
   this.texture.dispose();
+  this.texture_displacement.dispose();
+  this.material.dispose();
 };
 
 /**
@@ -102,7 +139,7 @@ ROS3D.OccupancyGrid.prototype.dispose = function() {
  * @param {int} col the column of the cell
  * @param {object} data the data buffer
  */
-ROS3D.OccupancyGrid.prototype.getValue = function(index, row, col, data) {
+ROS3D.OccupancyGrid.prototype.getValue = function (index, row, col, data) {
   return data[index];
 };
 
@@ -116,7 +153,7 @@ ROS3D.OccupancyGrid.prototype.getValue = function(index, row, col, data) {
  * @param {float} value the value of the cell
  * @returns r,g,b,a array of values from 0 to 255 representing the color values for each channel
  */
-ROS3D.OccupancyGrid.prototype.getColor = function(index, row, col, value) {
+ROS3D.OccupancyGrid.prototype.getColor = function (index, row, col, value) {
   return [
     (value * this.color.r) / 255,
     (value * this.color.g) / 255,
@@ -124,5 +161,19 @@ ROS3D.OccupancyGrid.prototype.getColor = function(index, row, col, value) {
     255
   ];
 };
+// getColor(index, row, col, value) {
+// // console.log(value)
+// // value = 255 - value
+//   return [
+//   //   (value * this.color.r) / 255,
+//   //   (value * this.color.g) / 255,
+//   //   (value * this.color.b) / 255,
+// //   255
+// 64,90,221,
+// //   value ==-1?0:255
+//   value > 90?0:255
+// // (value/100)*255
+//   ];
+// };
 
 ROS3D.OccupancyGrid.prototype.__proto__ = THREE.Mesh.prototype;
