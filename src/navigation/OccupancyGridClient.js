@@ -80,20 +80,25 @@ ROS3D.OccupancyGridClient.prototype.processMessage = function(message){
     this.currentGrid.dispose();
   }
 
-  var newGrid = new ROS3D.OccupancyGrid({
-    message : message,
-    color : this.color,
-    opacity : this.opacity
-  });
+  
+
+  if(!this.currentGrid){
+    this.currentGrid = new ROS3D.OccupancyGrid({
+      message : message,
+      color : this.color,
+      opacity : this.opacity
+    });
+  }
 
   // check if we care about the scene
   if (this.tfClient) {
-    this.currentGrid = newGrid;
+    // this.currentGrid = newGrid;
+    this.currentGrid.processMessage(message);
     if (this.sceneNode === null) {
       this.sceneNode = new ROS3D.SceneNode({
         frameID : message.header.frame_id,
         tfClient : this.tfClient,
-        object : newGrid,
+        object : this.currentGrid,
         pose : this.offsetPose
       });
       this.rootObject.add(this.sceneNode);
@@ -101,7 +106,8 @@ ROS3D.OccupancyGridClient.prototype.processMessage = function(message){
       this.sceneNode.add(this.currentGrid);
     }
   } else {
-    this.sceneNode = this.currentGrid = newGrid;
+    this.currentGrid.processMessage(message);
+    this.sceneNode = this.currentGrid;// = newGrid;
     this.rootObject.add(this.currentGrid);
   }
 

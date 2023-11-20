@@ -22,30 +22,62 @@ ROS3D.OccupancyGrid = function (options) {
   // create the geometry
   var info = message.info;
   var origin = info.origin;
-  var width = info.width;
-  var height = info.height;
-  var geom = new THREE.PlaneBufferGeometry(width, height, 100, 100);
+  this.width = info.width;
+  this.height = info.height;
+  var geom = new THREE.PlaneBufferGeometry(this.width, this.height, 100, 100);
 
 
   // create the color material
-  var imageData = new Uint8Array(width * height * 4);
-  var texture = new THREE.DataTexture(imageData, width, height, THREE.RGBAFormat);
-  texture.flipY = true;
-  texture.minFilter = THREE.NearestFilter;
-  texture.magFilter = THREE.NearestFilter;
-  texture.needsUpdate = true;
+  this.imageData = new Uint8Array(this.width * this.height * 4);
+  this.texture = new THREE.DataTexture(this.imageData, this.width, this.height, THREE.RGBAFormat);
+  this.texture.flipY = true;
+  this.texture.minFilter = THREE.NearestFilter;
+  this.texture.magFilter = THREE.NearestFilter;
+  this.texture.needsUpdate = true;
 
-  var displacementData = new Uint8Array(width * height * 3);
-  var texture_displacement = new THREE.DataTexture(displacementData, width, height, THREE.RGBFormat);
-  texture_displacement.flipY = true;
-  texture_displacement.minFilter = THREE.NearestFilter;
-  texture_displacement.magFilter = THREE.NearestFilter;
-  texture_displacement.needsUpdate = true;
+  this.displacementData = new Uint8Array(this.width * this.height * 3);
+  this.texture_displacement = new THREE.DataTexture(this.displacementData, this.width, this.height, THREE.RGBFormat);
+  this.texture_displacement.flipY = true;
+  this.texture_displacement.minFilter = THREE.NearestFilter;
+  this.texture_displacement.magFilter = THREE.NearestFilter;
+  this.texture_displacement.needsUpdate = true;
+
+  // TODO: add https://threejs.org/manual/#en/canvas-textures
+
+  const geometry = new THREE.IcosahedronGeometry( 0.5, 3 );
+  const marker_material = new THREE.MeshPhongMaterial( { color: 0xffffff } );
+
+  let amount = 100
+
+  let mesh = new THREE.InstancedMesh( geometry, marker_material, amount*amount );
+
+  let i = 0;
+  const offset = ( amount - 1 ) / 2;
+
+  const matrix = new THREE.Matrix4();
+
+  for ( let x = 0; x < amount; x ++ ) {
+
+    for ( let y = 0; y < amount; y ++ ) {
+
+
+        matrix.setPosition( offset - x, offset - y, 0 );
+
+        mesh.setMatrixAt( i, matrix );
+        mesh.setColorAt( i, color );
+        i ++;
+
+      
+
+    }
+
+  }
+
 
   // var material = new THREE.MeshBasicMaterial({
   var material = new THREE.MeshPhongMaterial({
-    map: texture,
-    displacementMap: texture_displacement,
+    map: this.texture,
+    displacementMap: this.texture_displacement,
     //   displacementScale: 1.0,
     //   transparent : true,
     shininess:0.0,
@@ -71,8 +103,8 @@ ROS3D.OccupancyGrid = function (options) {
     origin.orientation.z,
     origin.orientation.w
   ));
-  this.position.x = (width * info.resolution) / 2 + origin.position.x;
-  this.position.y = (height * info.resolution) / 2 + origin.position.y;
+  this.position.x = (this.width * info.resolution) / 2 + origin.position.x;
+  this.position.y = (this.height * info.resolution) / 2 + origin.position.y;
   this.position.z = origin.position.z;
   this.scale.x = info.resolution;
   this.scale.y = info.resolution;
@@ -81,16 +113,21 @@ ROS3D.OccupancyGrid = function (options) {
   // update the texture (after the the super call and this are accessible)
   this.color = color;
   this.material = material;
-  this.texture = texture;
-  this.texture_displacement = texture_displacement;
+  this.texture = this.texture;
+  this.texture_displacement = this.texture_displacement;
   this.geom = geom;
 
-  for (var row = 0; row < height; row++) {
-    for (var col = 0; col < width; col++) {
+  this.circles = [];
+
+  this.add(mesh);
+    
+
+  for (var row = 0; row < this.height; row++) {
+    for (var col = 0; col < this.width; col++) {
 
       // determine the index into the map data
-      var invRow = (height - row - 1);
-      var mapI = col + (invRow * width);
+      var invRow = (this.height - row - 1);
+      var mapI = col + (invRow * this.width);
       // determine the value
       var val = this.getValue(mapI, invRow, col, data);
 
@@ -98,35 +135,77 @@ ROS3D.OccupancyGrid = function (options) {
       var color = this.getColor(mapI, invRow, col, 255-(val/100)*255);
       color[3] = (100 - val)/100*255;
       // determine the index into the image data array
-      var i = (col + (row * width)) * 4;
-      var ii = (col + (row * width)) * 3;
+      let i = (col + (row * this.width)) * 4;
+      let ii = (col + (row * this.width)) * 3;
 
 
 
-      if (val >= 90 || val === -1) {
+      if (val >= 100 || val === -1) {
         // color = [255,255,255,255];
         color = [0,0,0,0];
       }
 
 
       if (val >= 100){
-        displacementData.set([255, 255, 255], ii);
+        this.displacementData.set([255, 255, 255], ii);
       } else {
-        displacementData.set([0, 0, 0], ii);
+        this.displacementData.set([0, 0, 0], ii);
       }
 
       // copy the color
-      imageData.set(color, i);
+      this.imageData.set(color, i);
     }
   }
 
-  texture.needsUpdate = true;
+  this.texture.needsUpdate = true;
   // imageData = null;
   // displacementData = null;
 };
 
+ROS3D.OccupancyGrid.prototype.processMessage = function (message){
+  let data = message.data;
+  for (var row = 0; row < this.height; row++) {
+    for (var col = 0; col < this.width; col++) {
+
+      // determine the index into the map data
+      var invRow = (this.height - row - 1);
+      var mapI = col + (invRow * this.width);
+      // determine the value
+      var val = this.getValue(mapI, invRow, col, data);
+
+      // determine the color
+      var color = this.getColor(mapI, invRow, col, 255-(val/100)*255);
+      color[3] = (100 - val)/100*255;
+      // determine the index into the image data array
+      let i = (col + (row * this.width)) * 4;
+      let ii = (col + (row * this.width)) * 3;
+
+
+
+      if (val >= 100 || val === -1) {
+        // color = [255,255,255,255];
+        color = [0,0,0,0];
+      }
+
+
+      if (val >= 100){
+        this.displacementData.set([255, 255, 255], ii);
+      } else {
+        this.displacementData.set([0, 0, 0], ii);
+      }
+
+      // copy the color
+      this.imageData.set(color, i);
+    }
+  }
+
+  this.texture.needsUpdate = true;
+  this.texture_displacement.needsUpdate = true;
+};
+
+
 ROS3D.OccupancyGrid.prototype.dispose = function () {
-  this.geom.dispose()
+  this.geom.dispose();
   this.texture.dispose();
   this.texture_displacement.dispose();
   this.material.dispose();
