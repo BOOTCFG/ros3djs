@@ -35,6 +35,7 @@ ROS3D.OccupancyGridClient = function(options) {
   this.offsetPose = options.offsetPose || new ROSLIB.Pose();
   this.color = options.color || {r:255,g:255,b:255};
   this.opacity = options.opacity || 1.0;
+  this.camera = options.camera;
 
   // current grid that is displayed
   this.currentGrid = null;
@@ -86,7 +87,8 @@ ROS3D.OccupancyGridClient.prototype.processMessage = function(message){
     this.currentGrid = new ROS3D.OccupancyGrid({
       message : message,
       color : this.color,
-      opacity : this.opacity
+      opacity : this.opacity,
+      camera: this.camera
     });
   }
 

@@ -11,7 +11,8 @@ module.exports = function(config) {
 
     // List of files / patterns to load in the browser
     files: [
-      '../node_modules/eventemitter2/lib/eventemitter2.js',
+      '../node_modules/eventemitter3/umd/eventemitter3.js',
+      // '../node_modules/eventemitter2/lib/eventemitter2.js',
       '../node_modules/lodash/lodash.js',
       '../node_modules/roslib/build/roslib.js',
       '../node_modules/three/build/three.js',

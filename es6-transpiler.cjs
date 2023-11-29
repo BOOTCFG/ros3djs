@@ -537,7 +537,10 @@ const transpile = {
               break;
             }
             case 'EventEmitter2': {
-              importString = "import EventEmitter2 from 'eventemitter2';"
+              importString = "import EventEmitter2 from 'eventemitter2';";
+              // importString = "import {pkg} from 'eventemitter2'; const { EventEmitter2 } = pkg;"
+              // importString = "import {EventEmitter2} from 'eventemitter2';let EventEmitter2 = EventEmitter2.EventEmitter2"
+              // importString = "import('eventemitter2').EventEmitter2;"
               break;
             }
             case 'ColladaLoader': {

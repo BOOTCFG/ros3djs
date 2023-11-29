@@ -1,17 +1,20 @@
-const rollup = require('rollup');
+// const rollup = require('rollup');
+// import rollup from "rollup";
 
 // plugin that transpiles output into commonjs format
-const commonjs = require('@rollup/plugin-commonjs');
-// plugin that transpiles es6 to es5 for legacy platforms
-const buble = require('@rollup/plugin-buble');
+// const commonjs = require('@rollup/plugin-commonjs');
+// // plugin that transpiles es6 to es5 for legacy platforms
+// const buble = require('@rollup/plugin-buble');
 // plugin that shows output file info
-const filesize = require('rollup-plugin-filesize');
+// const filesize = require('rollup-plugin-filesize');
 /// plugin that resolves node module imports
-const { nodeResolve } = require('@rollup/plugin-node-resolve');
+// const { nodeResolve } = require('@rollup/plugin-node-resolve');
+import nodeResolve from "@rollup/plugin-node-resolve";
 // plugin that minifies and obfuscates code
-const { terser } = require('rollup-plugin-terser');
+// const { terser } = require('rollup-plugin-terser');
+import typescript from "rollup-plugin-typescript2";
 
-const pkg = require('./package.json');
+// const pkg = require('./package.json');
 const input = 'src-esm/index.js';
 
 const browserGlobals = {
@@ -23,34 +26,34 @@ const moduleGlobals = {
 };
 
 const outputFiles = {
-  commonModule: pkg.main,
-  esModule: pkg.module,
+  commonModule: './build/ros3d.cjs.js',
+  esModule: './build/ros3d.esm.js',
   browserGlobal: './build/ros3d.js',
   browserGlobalMinified: './build/ros3d.min.js',
 };
 
 export default [
   // build main as ES5 in CommonJS format for compatibility
-  {
-    input,
-    output: {
-      name: 'ROS3D',
-      file: outputFiles.commonModule,
-      format: 'cjs',
-      globals: {
-        ...moduleGlobals,
-      }
-    },
-    external: [
-      ...Object.keys(moduleGlobals)
-    ],
-    plugins: [
-      nodeResolve({ browser: true }),
-      commonjs(),
-      buble(),
-      filesize(),
-    ],
-  },
+  // {
+  //   input,
+  //   output: {
+  //     name: 'ROS3D',
+  //     file: outputFiles.commonModule,
+  //     format: 'cjs',
+  //     globals: {
+  //       ...moduleGlobals,
+  //     }
+  //   },
+  //   external: [
+  //     ...Object.keys(moduleGlobals)
+  //   ],
+  //   plugins: [
+  //     nodeResolve({ browser: true }),
+  //     // commonjs(),
+  //     // buble(),
+  //     // filesize(),
+  //   ],
+  // },
   // build module as ES5 in ES module format for modern tooling
   {
     input,
@@ -60,16 +63,18 @@ export default [
       format: 'es',
       globals: {
         ...moduleGlobals,
-      }
+      },
+      inlineDynamicImports:true,
     },
     external: [
       ...Object.keys(moduleGlobals)
     ],
     plugins: [
       nodeResolve({ browser: true }),
-      commonjs(),
-      buble(),
-      filesize(),
+      typescript(),
+      // commonjs(),
+      // buble(),
+      // filesize(),
     ],
   },
   // build browser as IIFE module for script tag inclusion, unminified
@@ -90,8 +95,8 @@ export default [
     ],
     plugins: [
       nodeResolve({ browser: true }),
-      commonjs(),
-      filesize(),
+      // commonjs(),
+      // filesize(),
     ],
   },
   // build browser as IIFE module for script tag inclusion, minified
@@ -112,9 +117,9 @@ export default [
     ],
     plugins: [
       nodeResolve({ browser: true }),
-      commonjs(),
-      filesize(),
-      terser(),
+      // commonjs(),
+      // filesize(),
+      // terser(),
     ],
   },
 ];
