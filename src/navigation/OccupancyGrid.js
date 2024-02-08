@@ -96,8 +96,6 @@ ROS3D.OccupancyGrid = function (options) {
   // material.side = THREE.DoubleSide;
   material.side = THREE.FrontSide;
 
-  // console.log('dupa');
-
   // create the mesh
   THREE.Mesh.call(this, geom, material);
   // move the map so the corner is at X, Y and correct orientation (informations from message.info)
@@ -166,7 +164,7 @@ ROS3D.OccupancyGrid = function (options) {
         // color = [255,255,255,255];
         color = [0,0,0,0];
         matrix.makeRotationX(Math.PI)
-        matrix.setPosition( -offset + col, offset - row, -0.1 );
+        matrix.setPosition( -offset + col, offset - row, -0.01 );
         mesh.setMatrixAt( row*height + col, matrix );
         mesh.setColorAt( row*height + col, new THREE.Color("red") );
       }else{
@@ -186,14 +184,16 @@ ROS3D.OccupancyGrid = function (options) {
 
 
       // copy the color
-      imageData.set(color, i);
+      // imageData.set(color, i);
     }
   }
   mesh.instanceMatrix.needsUpdate = true;
   mesh.instanceColor.needsUpdate = true;
-  texture.needsUpdate = true;
+  // texture.needsUpdate = true;
   // imageData = null;
   // displacementData = null;
+  //TODO: process message insead of this
+
 };
 
 ROS3D.OccupancyGrid.prototype.processMessage = function (message){
@@ -235,12 +235,12 @@ ROS3D.OccupancyGrid.prototype.processMessage = function (message){
 
       if (val >= 95 || val === -1){
         this.matrix.makeRotationX(Math.PI)
-        this.matrix.setPosition( -this.offset + col, this.offset - row, -0.1 );
+        this.matrix.setPosition( -this.offset + col, this.offset - row, -0.01 );
         this.mesh.setMatrixAt( row*this.height + col, this.matrix );
         this.mesh.setColorAt( row*this.height + col, new THREE.Color("red") );
       }else{
         this.matrix.makeRotationX(0)
-        this.matrix.setPosition( -this.offset + col, this.offset - row, +0.1 );
+        this.matrix.setPosition( -this.offset + col, this.offset - row, +0.01 );
         this.mesh.setMatrixAt( row*this.height + col, this.matrix );
         this.mesh.setColorAt( row*this.height + col, new THREE.Color(0x917EFE) );
       //   if(this.camera){
@@ -269,12 +269,12 @@ ROS3D.OccupancyGrid.prototype.processMessage = function (message){
       }
 
       // copy the color
-      this.imageData.set(color, i);
+      // this.imageData.set(color, i);
     }
   }
 
-  this.texture.needsUpdate = true;
-  this.texture_displacement.needsUpdate = true;
+  // this.texture.needsUpdate = true;
+  // this.texture_displacement.needsUpdate = true;
   this.mesh.instanceMatrix.needsUpdate = true;
   this.mesh.instanceColor.needsUpdate = true;
 };
