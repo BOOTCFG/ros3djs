@@ -533,7 +533,7 @@ const transpile = {
               break;
             }
             case 'ROSLIB': {
-              importString = "import * as ROSLIB from 'roslib';"
+              importString = "import * as ROSLIB from '/home/husarion/code/mercurius/roslibjs-foxglove/dist/esm';"
               break;
             }
             case 'EventEmitter2': {

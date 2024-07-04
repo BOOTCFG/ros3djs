@@ -3,6 +3,6 @@
     "lib": ["es5", "es6", "dom"],
     "target": "es5"
   },
-  "include": ["**/*"],
+  "include": ["**/*","*.js+(|x)", "**/*.js+(|x)"],
   "exclude": ["**/*.spec.ts"]
 }

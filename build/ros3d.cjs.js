@@ -1,7 +1,7 @@
 'use strict';
 
 var THREE$1 = require('three');
-var ROSLIB = require('roslib');
+var ROSLIB = require('/home/husarion/code/mercurius/roslibjs-foxglove/dist/esm');
 var EventEmitter2 = require('eventemitter2');
 
 function _interopNamespaceDefault(e) {

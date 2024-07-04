@@ -2,7 +2,7 @@
 // import rollup from "rollup";
 
 // plugin that transpiles output into commonjs format
-// const commonjs = require('@rollup/plugin-commonjs');
+import commonjs from '@rollup/plugin-commonjs';
 // // plugin that transpiles es6 to es5 for legacy platforms
 // const buble = require('@rollup/plugin-buble');
 // plugin that shows output file info
@@ -71,8 +71,8 @@ export default [
     ],
     plugins: [
       nodeResolve({ browser: true }),
-      typescript(),
-      // commonjs(),
+      // typescript({allowJs: true}),
+      commonjs(),
       // buble(),
       // filesize(),
     ],
@@ -95,7 +95,7 @@ export default [
     ],
     plugins: [
       nodeResolve({ browser: true }),
-      // commonjs(),
+      commonjs(),
       // filesize(),
     ],
   },
@@ -117,7 +117,7 @@ export default [
     ],
     plugins: [
       nodeResolve({ browser: true }),
-      // commonjs(),
+      commonjs(),
       // filesize(),
       // terser(),
     ],

@@ -9,15 +9,18 @@
   "type": "module",
   "dependencies": {
     "eventemitter2": "^6.4.7",
+    "jest": "^29.7.0",
+    "liftup": "^3.0.1",
     "roslib": "^1.0.0",
-    "three": "^0.158.0"
+    "three": "^0.162.0"
   },
   "devDependencies": {
+    "@rollup/plugin-commonjs": "^26.0.1",
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-typescript": "^11.1.5",
     "chai": "^4.3.0",
     "debug": "^4.3.0",
-    "grunt": "^1.0.0",
+    "grunt": "^1.6.1",
     "grunt-contrib-clean": "^2.0.0",
     "grunt-contrib-watch": "^1.0.0",
     "grunt-execute": "git+https://github.com/gruntjs-updater/grunt-execute.git#peerDep",
